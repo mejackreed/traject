@@ -136,7 +136,7 @@ class Traject::SolrJsonWriter
         "Solr response: #{resp.status}: #{resp.body}"
 
       logger.error "Error in Solr batch add. Will retry documents individually at performance penalty: #{error_message}"
-
+      logger.error "#{resp.status}"
       batch.each do |c|
         send_single(c)
       end
@@ -153,6 +153,9 @@ class Traject::SolrJsonWriter
       # Catch Timeouts and network errors as skipped records, but otherwise
       # allow unexpected errors to propagate up.
     rescue HTTPClient::TimeoutError, SocketError, Errno::ECONNREFUSED => exception
+    rescue StandardError => exception
+      logger.error "#{exception.message}"
+      logger.error "#{resp.status}"
     end
 
     if exception || resp.status != 200
